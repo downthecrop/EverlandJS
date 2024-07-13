@@ -107,6 +107,26 @@ protobuf.load("messages.proto", (err, root) => {
                         const message = EstablishSessionRequest.decode(data);
                         console.log('Received EstablishSessionRequest:', message);
 
+                        let appearance = [CharacterAppearance.create({
+                            part: 1,
+                            value: Long.fromString("76773426565103630")
+                        }), CharacterAppearance.create({
+                            part: 2,
+                            value: Long.fromString("76773426451857435")
+                        }), CharacterAppearance.create({
+                            part: 3,
+                            value: Long.fromString("76773426334416913")
+                        }), CharacterAppearance.create({
+                            part: 5,
+                            value: Long.fromString("76773425881432070")
+                        }),  CharacterAppearance.create({
+                            part: 7,
+                            value: Long.fromString("76773426363777052")
+                        }),  CharacterAppearance.create({
+                            part: 8,
+                            value: Long.fromString("76773426460246021")
+                        })]
+
                         const mockAccount = AccountInfo.create({
                             accountId: 123,
                             email: "test@test"
@@ -116,10 +136,7 @@ protobuf.load("messages.proto", (err, root) => {
                             characterId: 1,
                             name: "Crop",
                             createdTimestamp: Date.now(),
-                            appearance: [CharacterAppearance.create({
-                                part: 1,
-                                value: Long.fromString("76773426334416903")
-                            })]
+                            appearance: appearance
                         });
 
                         const payload = EstablishSessionResponse.create({
@@ -139,10 +156,7 @@ protobuf.load("messages.proto", (err, root) => {
                             accountId: 123,
                             characterId: 1,
                             displayName: "Crop",
-                            appearance: [CharacterAppearance.create({
-                                part: 1,
-                                value: Long.fromString("76773426334416903")
-                            })]
+                            appearance: appearance
                         });
 
                         const wrappedEntityState = WrappedEntityState.create({
