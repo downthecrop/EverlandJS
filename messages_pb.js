@@ -20,6 +20,7 @@ goog.exportSymbol('proto.myPackage.CharacterAppearance', null, global);
 goog.exportSymbol('proto.myPackage.CharacterAppearancePart', null, global);
 goog.exportSymbol('proto.myPackage.CharacterInfo', null, global);
 goog.exportSymbol('proto.myPackage.EntityType', null, global);
+goog.exportSymbol('proto.myPackage.ErrorCode', null, global);
 goog.exportSymbol('proto.myPackage.EstablishSessionRequest', null, global);
 goog.exportSymbol('proto.myPackage.EstablishSessionResponse', null, global);
 goog.exportSymbol('proto.myPackage.FacingDirection', null, global);
@@ -864,8 +865,9 @@ proto.myPackage.EstablishSessionResponse.prototype.toObject = function(opt_inclu
 proto.myPackage.EstablishSessionResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
     success: jspb.Message.getBooleanFieldWithDefault(msg, 1, false),
-    clienttimestamp: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    mastertimestamp: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    error: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    clienttimestamp: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    mastertimestamp: jspb.Message.getFieldWithDefault(msg, 4, 0),
     account: (f = msg.getAccount()) && proto.myPackage.AccountInfo.toObject(includeInstance, f),
     character: (f = msg.getCharacter()) && proto.myPackage.CharacterInfo.toObject(includeInstance, f)
   };
@@ -909,19 +911,23 @@ proto.myPackage.EstablishSessionResponse.deserializeBinaryFromReader = function(
       msg.setSuccess(value);
       break;
     case 2:
-      var value = /** @type {number} */ (reader.readInt64());
-      msg.setClienttimestamp(value);
+      var value = /** @type {!proto.myPackage.ErrorCode} */ (reader.readEnum());
+      msg.setError(value);
       break;
     case 3:
       var value = /** @type {number} */ (reader.readInt64());
-      msg.setMastertimestamp(value);
+      msg.setClienttimestamp(value);
       break;
     case 4:
+      var value = /** @type {number} */ (reader.readInt64());
+      msg.setMastertimestamp(value);
+      break;
+    case 5:
       var value = new proto.myPackage.AccountInfo;
       reader.readMessage(value,proto.myPackage.AccountInfo.deserializeBinaryFromReader);
       msg.setAccount(value);
       break;
-    case 5:
+    case 6:
       var value = new proto.myPackage.CharacterInfo;
       reader.readMessage(value,proto.myPackage.CharacterInfo.deserializeBinaryFromReader);
       msg.setCharacter(value);
@@ -962,24 +968,31 @@ proto.myPackage.EstablishSessionResponse.serializeBinaryToWriter = function(mess
       f
     );
   }
-  f = message.getClienttimestamp();
-  if (f !== 0) {
-    writer.writeInt64(
+  f = message.getError();
+  if (f !== 0.0) {
+    writer.writeEnum(
       2,
       f
     );
   }
-  f = message.getMastertimestamp();
+  f = message.getClienttimestamp();
   if (f !== 0) {
     writer.writeInt64(
       3,
       f
     );
   }
+  f = message.getMastertimestamp();
+  if (f !== 0) {
+    writer.writeInt64(
+      4,
+      f
+    );
+  }
   f = message.getAccount();
   if (f != null) {
     writer.writeMessage(
-      4,
+      5,
       f,
       proto.myPackage.AccountInfo.serializeBinaryToWriter
     );
@@ -987,7 +1000,7 @@ proto.myPackage.EstablishSessionResponse.serializeBinaryToWriter = function(mess
   f = message.getCharacter();
   if (f != null) {
     writer.writeMessage(
-      5,
+      6,
       f,
       proto.myPackage.CharacterInfo.serializeBinaryToWriter
     );
@@ -1014,28 +1027,28 @@ proto.myPackage.EstablishSessionResponse.prototype.setSuccess = function(value) 
 
 
 /**
- * optional int64 clientTimestamp = 2;
+ * optional ErrorCode error = 2;
+ * @return {!proto.myPackage.ErrorCode}
+ */
+proto.myPackage.EstablishSessionResponse.prototype.getError = function() {
+  return /** @type {!proto.myPackage.ErrorCode} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {!proto.myPackage.ErrorCode} value
+ * @return {!proto.myPackage.EstablishSessionResponse} returns this
+ */
+proto.myPackage.EstablishSessionResponse.prototype.setError = function(value) {
+  return jspb.Message.setProto3EnumField(this, 2, value);
+};
+
+
+/**
+ * optional int64 clientTimestamp = 3;
  * @return {number}
  */
 proto.myPackage.EstablishSessionResponse.prototype.getClienttimestamp = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.myPackage.EstablishSessionResponse} returns this
- */
-proto.myPackage.EstablishSessionResponse.prototype.setClienttimestamp = function(value) {
-  return jspb.Message.setProto3IntField(this, 2, value);
-};
-
-
-/**
- * optional int64 masterTimestamp = 3;
- * @return {number}
- */
-proto.myPackage.EstablishSessionResponse.prototype.getMastertimestamp = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
@@ -1044,18 +1057,36 @@ proto.myPackage.EstablishSessionResponse.prototype.getMastertimestamp = function
  * @param {number} value
  * @return {!proto.myPackage.EstablishSessionResponse} returns this
  */
-proto.myPackage.EstablishSessionResponse.prototype.setMastertimestamp = function(value) {
+proto.myPackage.EstablishSessionResponse.prototype.setClienttimestamp = function(value) {
   return jspb.Message.setProto3IntField(this, 3, value);
 };
 
 
 /**
- * optional AccountInfo account = 4;
+ * optional int64 masterTimestamp = 4;
+ * @return {number}
+ */
+proto.myPackage.EstablishSessionResponse.prototype.getMastertimestamp = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.myPackage.EstablishSessionResponse} returns this
+ */
+proto.myPackage.EstablishSessionResponse.prototype.setMastertimestamp = function(value) {
+  return jspb.Message.setProto3IntField(this, 4, value);
+};
+
+
+/**
+ * optional AccountInfo account = 5;
  * @return {?proto.myPackage.AccountInfo}
  */
 proto.myPackage.EstablishSessionResponse.prototype.getAccount = function() {
   return /** @type{?proto.myPackage.AccountInfo} */ (
-    jspb.Message.getWrapperField(this, proto.myPackage.AccountInfo, 4));
+    jspb.Message.getWrapperField(this, proto.myPackage.AccountInfo, 5));
 };
 
 
@@ -1064,7 +1095,7 @@ proto.myPackage.EstablishSessionResponse.prototype.getAccount = function() {
  * @return {!proto.myPackage.EstablishSessionResponse} returns this
 */
 proto.myPackage.EstablishSessionResponse.prototype.setAccount = function(value) {
-  return jspb.Message.setWrapperField(this, 4, value);
+  return jspb.Message.setWrapperField(this, 5, value);
 };
 
 
@@ -1082,17 +1113,17 @@ proto.myPackage.EstablishSessionResponse.prototype.clearAccount = function() {
  * @return {boolean}
  */
 proto.myPackage.EstablishSessionResponse.prototype.hasAccount = function() {
-  return jspb.Message.getField(this, 4) != null;
+  return jspb.Message.getField(this, 5) != null;
 };
 
 
 /**
- * optional CharacterInfo character = 5;
+ * optional CharacterInfo character = 6;
  * @return {?proto.myPackage.CharacterInfo}
  */
 proto.myPackage.EstablishSessionResponse.prototype.getCharacter = function() {
   return /** @type{?proto.myPackage.CharacterInfo} */ (
-    jspb.Message.getWrapperField(this, proto.myPackage.CharacterInfo, 5));
+    jspb.Message.getWrapperField(this, proto.myPackage.CharacterInfo, 6));
 };
 
 
@@ -1101,7 +1132,7 @@ proto.myPackage.EstablishSessionResponse.prototype.getCharacter = function() {
  * @return {!proto.myPackage.EstablishSessionResponse} returns this
 */
 proto.myPackage.EstablishSessionResponse.prototype.setCharacter = function(value) {
-  return jspb.Message.setWrapperField(this, 5, value);
+  return jspb.Message.setWrapperField(this, 6, value);
 };
 
 
@@ -1119,7 +1150,7 @@ proto.myPackage.EstablishSessionResponse.prototype.clearCharacter = function() {
  * @return {boolean}
  */
 proto.myPackage.EstablishSessionResponse.prototype.hasCharacter = function() {
-  return jspb.Message.getField(this, 5) != null;
+  return jspb.Message.getField(this, 6) != null;
 };
 
 
@@ -1157,11 +1188,8 @@ proto.myPackage.AccountInfo.toObject = function(includeInstance, msg) {
   var f, obj = {
     accountid: jspb.Message.getFieldWithDefault(msg, 1, 0),
     email: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    isadmin: jspb.Message.getBooleanFieldWithDefault(msg, 3, false),
-    createdat: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    lastlogin: jspb.Message.getFieldWithDefault(msg, 5, ""),
-    disabledat: jspb.Message.getFieldWithDefault(msg, 6, ""),
-    banneduntil: jspb.Message.getFieldWithDefault(msg, 7, "")
+    createdat: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    banneduntil: jspb.Message.getFieldWithDefault(msg, 4, 0)
   };
 
   if (includeInstance) {
@@ -1207,23 +1235,11 @@ proto.myPackage.AccountInfo.deserializeBinaryFromReader = function(msg, reader) 
       msg.setEmail(value);
       break;
     case 3:
-      var value = /** @type {boolean} */ (reader.readBool());
-      msg.setIsadmin(value);
-      break;
-    case 4:
-      var value = /** @type {string} */ (reader.readString());
+      var value = /** @type {number} */ (reader.readInt64());
       msg.setCreatedat(value);
       break;
-    case 5:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setLastlogin(value);
-      break;
-    case 6:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setDisabledat(value);
-      break;
-    case 7:
-      var value = /** @type {string} */ (reader.readString());
+    case 4:
+      var value = /** @type {number} */ (reader.readInt64());
       msg.setBanneduntil(value);
       break;
     default:
@@ -1269,38 +1285,17 @@ proto.myPackage.AccountInfo.serializeBinaryToWriter = function(message, writer) 
       f
     );
   }
-  f = message.getIsadmin();
-  if (f) {
-    writer.writeBool(
+  f = message.getCreatedat();
+  if (f !== 0) {
+    writer.writeInt64(
       3,
       f
     );
   }
-  f = message.getCreatedat();
-  if (f.length > 0) {
-    writer.writeString(
-      4,
-      f
-    );
-  }
-  f = message.getLastlogin();
-  if (f.length > 0) {
-    writer.writeString(
-      5,
-      f
-    );
-  }
-  f = message.getDisabledat();
-  if (f.length > 0) {
-    writer.writeString(
-      6,
-      f
-    );
-  }
   f = message.getBanneduntil();
-  if (f.length > 0) {
-    writer.writeString(
-      7,
+  if (f !== 0) {
+    writer.writeInt64(
+      4,
       f
     );
   }
@@ -1344,92 +1339,38 @@ proto.myPackage.AccountInfo.prototype.setEmail = function(value) {
 
 
 /**
- * optional bool isAdmin = 3;
- * @return {boolean}
- */
-proto.myPackage.AccountInfo.prototype.getIsadmin = function() {
-  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 3, false));
-};
-
-
-/**
- * @param {boolean} value
- * @return {!proto.myPackage.AccountInfo} returns this
- */
-proto.myPackage.AccountInfo.prototype.setIsadmin = function(value) {
-  return jspb.Message.setProto3BooleanField(this, 3, value);
-};
-
-
-/**
- * optional string createdAt = 4;
- * @return {string}
+ * optional int64 createdAt = 3;
+ * @return {number}
  */
 proto.myPackage.AccountInfo.prototype.getCreatedat = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
 
 /**
- * @param {string} value
+ * @param {number} value
  * @return {!proto.myPackage.AccountInfo} returns this
  */
 proto.myPackage.AccountInfo.prototype.setCreatedat = function(value) {
-  return jspb.Message.setProto3StringField(this, 4, value);
+  return jspb.Message.setProto3IntField(this, 3, value);
 };
 
 
 /**
- * optional string lastLogin = 5;
- * @return {string}
- */
-proto.myPackage.AccountInfo.prototype.getLastlogin = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.myPackage.AccountInfo} returns this
- */
-proto.myPackage.AccountInfo.prototype.setLastlogin = function(value) {
-  return jspb.Message.setProto3StringField(this, 5, value);
-};
-
-
-/**
- * optional string disabledAt = 6;
- * @return {string}
- */
-proto.myPackage.AccountInfo.prototype.getDisabledat = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.myPackage.AccountInfo} returns this
- */
-proto.myPackage.AccountInfo.prototype.setDisabledat = function(value) {
-  return jspb.Message.setProto3StringField(this, 6, value);
-};
-
-
-/**
- * optional string bannedUntil = 7;
- * @return {string}
+ * optional int64 bannedUntil = 4;
+ * @return {number}
  */
 proto.myPackage.AccountInfo.prototype.getBanneduntil = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 7, ""));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
 
 /**
- * @param {string} value
+ * @param {number} value
  * @return {!proto.myPackage.AccountInfo} returns this
  */
 proto.myPackage.AccountInfo.prototype.setBanneduntil = function(value) {
-  return jspb.Message.setProto3StringField(this, 7, value);
+  return jspb.Message.setProto3IntField(this, 4, value);
 };
 
 
@@ -1439,7 +1380,7 @@ proto.myPackage.AccountInfo.prototype.setBanneduntil = function(value) {
  * @private {!Array<number>}
  * @const
  */
-proto.myPackage.CharacterInfo.repeatedFields_ = [2,8];
+proto.myPackage.CharacterInfo.repeatedFields_ = [4];
 
 
 
@@ -1472,13 +1413,9 @@ proto.myPackage.CharacterInfo.prototype.toObject = function(opt_includeInstance)
  */
 proto.myPackage.CharacterInfo.toObject = function(includeInstance, msg) {
   var f, obj = {
-    name: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    itemidsList: (f = jspb.Message.getRepeatedField(msg, 2)) == null ? undefined : f,
-    characterid: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    displayname: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    mapid: jspb.Message.getFieldWithDefault(msg, 5, 0),
-    channelid: jspb.Message.getFieldWithDefault(msg, 6, 0),
-    createdtimestamp: jspb.Message.getFieldWithDefault(msg, 7, 0),
+    characterid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    name: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    createdtimestamp: jspb.Message.getFieldWithDefault(msg, 3, 0),
     appearanceList: jspb.Message.toObjectList(msg.getAppearanceList(),
     proto.myPackage.CharacterAppearance.toObject, includeInstance)
   };
@@ -1518,36 +1455,18 @@ proto.myPackage.CharacterInfo.deserializeBinaryFromReader = function(msg, reader
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setName(value);
-      break;
-    case 2:
-      var values = /** @type {!Array<number>} */ (reader.isDelimited() ? reader.readPackedInt32() : [reader.readInt32()]);
-      for (var i = 0; i < values.length; i++) {
-        msg.addItemids(values[i]);
-      }
-      break;
-    case 3:
       var value = /** @type {number} */ (reader.readInt64());
       msg.setCharacterid(value);
       break;
-    case 4:
+    case 2:
       var value = /** @type {string} */ (reader.readString());
-      msg.setDisplayname(value);
+      msg.setName(value);
       break;
-    case 5:
-      var value = /** @type {number} */ (reader.readInt32());
-      msg.setMapid(value);
-      break;
-    case 6:
-      var value = /** @type {number} */ (reader.readInt32());
-      msg.setChannelid(value);
-      break;
-    case 7:
+    case 3:
       var value = /** @type {number} */ (reader.readInt64());
       msg.setCreatedtimestamp(value);
       break;
-    case 8:
+    case 4:
       var value = new proto.myPackage.CharacterAppearance;
       reader.readMessage(value,proto.myPackage.CharacterAppearance.deserializeBinaryFromReader);
       msg.addAppearance(value);
@@ -1581,59 +1500,31 @@ proto.myPackage.CharacterInfo.prototype.serializeBinary = function() {
  */
 proto.myPackage.CharacterInfo.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getName();
-  if (f.length > 0) {
-    writer.writeString(
+  f = message.getCharacterid();
+  if (f !== 0) {
+    writer.writeInt64(
       1,
       f
     );
   }
-  f = message.getItemidsList();
-  if (f.length > 0) {
-    writer.writePackedInt32(
-      2,
-      f
-    );
-  }
-  f = message.getCharacterid();
-  if (f !== 0) {
-    writer.writeInt64(
-      3,
-      f
-    );
-  }
-  f = message.getDisplayname();
+  f = message.getName();
   if (f.length > 0) {
     writer.writeString(
-      4,
-      f
-    );
-  }
-  f = message.getMapid();
-  if (f !== 0) {
-    writer.writeInt32(
-      5,
-      f
-    );
-  }
-  f = message.getChannelid();
-  if (f !== 0) {
-    writer.writeInt32(
-      6,
+      2,
       f
     );
   }
   f = message.getCreatedtimestamp();
   if (f !== 0) {
     writer.writeInt64(
-      7,
+      3,
       f
     );
   }
   f = message.getAppearanceList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      8,
+      4,
       f,
       proto.myPackage.CharacterAppearance.serializeBinaryToWriter
     );
@@ -1642,66 +1533,11 @@ proto.myPackage.CharacterInfo.serializeBinaryToWriter = function(message, writer
 
 
 /**
- * optional string name = 1;
- * @return {string}
- */
-proto.myPackage.CharacterInfo.prototype.getName = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.myPackage.CharacterInfo} returns this
- */
-proto.myPackage.CharacterInfo.prototype.setName = function(value) {
-  return jspb.Message.setProto3StringField(this, 1, value);
-};
-
-
-/**
- * repeated int32 itemIds = 2;
- * @return {!Array<number>}
- */
-proto.myPackage.CharacterInfo.prototype.getItemidsList = function() {
-  return /** @type {!Array<number>} */ (jspb.Message.getRepeatedField(this, 2));
-};
-
-
-/**
- * @param {!Array<number>} value
- * @return {!proto.myPackage.CharacterInfo} returns this
- */
-proto.myPackage.CharacterInfo.prototype.setItemidsList = function(value) {
-  return jspb.Message.setField(this, 2, value || []);
-};
-
-
-/**
- * @param {number} value
- * @param {number=} opt_index
- * @return {!proto.myPackage.CharacterInfo} returns this
- */
-proto.myPackage.CharacterInfo.prototype.addItemids = function(value, opt_index) {
-  return jspb.Message.addToRepeatedField(this, 2, value, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
- * @return {!proto.myPackage.CharacterInfo} returns this
- */
-proto.myPackage.CharacterInfo.prototype.clearItemidsList = function() {
-  return this.setItemidsList([]);
-};
-
-
-/**
- * optional int64 characterId = 3;
+ * optional int64 characterId = 1;
  * @return {number}
  */
 proto.myPackage.CharacterInfo.prototype.getCharacterid = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
 
@@ -1710,16 +1546,16 @@ proto.myPackage.CharacterInfo.prototype.getCharacterid = function() {
  * @return {!proto.myPackage.CharacterInfo} returns this
  */
 proto.myPackage.CharacterInfo.prototype.setCharacterid = function(value) {
-  return jspb.Message.setProto3IntField(this, 3, value);
+  return jspb.Message.setProto3IntField(this, 1, value);
 };
 
 
 /**
- * optional string displayName = 4;
+ * optional string name = 2;
  * @return {string}
  */
-proto.myPackage.CharacterInfo.prototype.getDisplayname = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
+proto.myPackage.CharacterInfo.prototype.getName = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
 };
 
 
@@ -1727,53 +1563,17 @@ proto.myPackage.CharacterInfo.prototype.getDisplayname = function() {
  * @param {string} value
  * @return {!proto.myPackage.CharacterInfo} returns this
  */
-proto.myPackage.CharacterInfo.prototype.setDisplayname = function(value) {
-  return jspb.Message.setProto3StringField(this, 4, value);
+proto.myPackage.CharacterInfo.prototype.setName = function(value) {
+  return jspb.Message.setProto3StringField(this, 2, value);
 };
 
 
 /**
- * optional int32 mapId = 5;
- * @return {number}
- */
-proto.myPackage.CharacterInfo.prototype.getMapid = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.myPackage.CharacterInfo} returns this
- */
-proto.myPackage.CharacterInfo.prototype.setMapid = function(value) {
-  return jspb.Message.setProto3IntField(this, 5, value);
-};
-
-
-/**
- * optional int32 channelId = 6;
- * @return {number}
- */
-proto.myPackage.CharacterInfo.prototype.getChannelid = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 6, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.myPackage.CharacterInfo} returns this
- */
-proto.myPackage.CharacterInfo.prototype.setChannelid = function(value) {
-  return jspb.Message.setProto3IntField(this, 6, value);
-};
-
-
-/**
- * optional int64 createdTimestamp = 7;
+ * optional int64 createdTimestamp = 3;
  * @return {number}
  */
 proto.myPackage.CharacterInfo.prototype.getCreatedtimestamp = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 7, 0));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
 
@@ -1782,17 +1582,17 @@ proto.myPackage.CharacterInfo.prototype.getCreatedtimestamp = function() {
  * @return {!proto.myPackage.CharacterInfo} returns this
  */
 proto.myPackage.CharacterInfo.prototype.setCreatedtimestamp = function(value) {
-  return jspb.Message.setProto3IntField(this, 7, value);
+  return jspb.Message.setProto3IntField(this, 3, value);
 };
 
 
 /**
- * repeated CharacterAppearance appearance = 8;
+ * repeated CharacterAppearance appearance = 4;
  * @return {!Array<!proto.myPackage.CharacterAppearance>}
  */
 proto.myPackage.CharacterInfo.prototype.getAppearanceList = function() {
   return /** @type{!Array<!proto.myPackage.CharacterAppearance>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.myPackage.CharacterAppearance, 8));
+    jspb.Message.getRepeatedWrapperField(this, proto.myPackage.CharacterAppearance, 4));
 };
 
 
@@ -1801,7 +1601,7 @@ proto.myPackage.CharacterInfo.prototype.getAppearanceList = function() {
  * @return {!proto.myPackage.CharacterInfo} returns this
 */
 proto.myPackage.CharacterInfo.prototype.setAppearanceList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 8, value);
+  return jspb.Message.setRepeatedWrapperField(this, 4, value);
 };
 
 
@@ -1811,7 +1611,7 @@ proto.myPackage.CharacterInfo.prototype.setAppearanceList = function(value) {
  * @return {!proto.myPackage.CharacterAppearance}
  */
 proto.myPackage.CharacterInfo.prototype.addAppearance = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 8, opt_value, proto.myPackage.CharacterAppearance, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 4, opt_value, proto.myPackage.CharacterAppearance, opt_index);
 };
 
 
@@ -3283,6 +3083,20 @@ proto.myPackage.EntityType = {
   ENTITY_TYPE_DOOR: 8,
   ENTITY_TYPE_COLLECTABLE: 9,
   ENTITY_TYPE_DJBOOTH: 10
+};
+
+/**
+ * @enum {number}
+ */
+proto.myPackage.ErrorCode = {
+  UNDEFINED: 0,
+  APPLICATIONINVALID: 1,
+  APPLICATIONOUTOFDATE: 2,
+  AUTHENTICATIONTOKENINVALID: 3,
+  ACCOUNTBANNED: 4,
+  MAINTENANCEACTIVE: 5,
+  ACCOUNTINUSE: 6,
+  CHARACTERINUSE: 7
 };
 
 /**

@@ -129,34 +129,34 @@ server.on('connection', (ws) => {
                     playerState.addAppearance(appearance);
 
                     const wrappedEntityState = new messages.WrappedEntityState();
-                    wrappedEntityState.setType(messages.EntityType.ENTITY_TYPE_PLAYER);
+                    wrappedEntityState.setType(5);
                     wrappedEntityState.setData(playerState.serializeBinary());
 
                     const gameSessionOpenedEvent = new messages.GameSessionOpenedEvent();
-                    gameSessionOpenedEvent.setAccountid(mockAccount.getAccountid());
-                    gameSessionOpenedEvent.setCharacterid(mockCharacter.getCharacterid());
+                    gameSessionOpenedEvent.setAccountid(123);
+                    gameSessionOpenedEvent.setCharacterid(1);
                     gameSessionOpenedEvent.setEntityid(1);  // Example entity ID
                     gameSessionOpenedEvent.setWrappedentitystate(wrappedEntityState);
                     gameSessionOpenedEvent.setChannelid(1);  // Example channel ID
                     gameSessionOpenedEvent.setMapid(1);  // Example map ID
 
-                    sendMessage(ws, MessageOpcode.GameSessionOpenedEvent, gameSessionOpenedEvent);
+                    //sendMessage(ws, MessageOpcode.GameSessionOpenedEvent, gameSessionOpenedEvent);
 
 
                     //ws.send(hexToBuffer(testPacket0), { binary: true });
                     //console.log('Sent test packet 0');
 
-                    //ws.send(hexToBuffer(testPacket1), { binary: true });
-                    //console.log('Sent test packet 1');
+                    ws.send(hexToBuffer(testPacket1), { binary: true });
+                    console.log('Sent test packet 1');
 
                     //ws.send(hexToBuffer(testPacket2), { binary: true });
                     //console.log('Sent test packet 2');
 
-                    ws.send(hexToBuffer(testPacket3), { binary: true });
-                    console.log('Sent test packet 3');
+                    //ws.send(hexToBuffer(testPacket3), { binary: true });
+                    //console.log('Sent test packet 3');
 
-                    ws.send(hexToBuffer(testPacket4), { binary: true });
-                    console.log('Sent test packet 4');
+                    //ws.send(hexToBuffer(testPacket4), { binary: true });
+                    //console.log('Sent test packet 4');
 
                     return;
                 } catch (err) {
