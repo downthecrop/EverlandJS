@@ -1,0 +1,126 @@
+﻿syntax = "proto3";
+
+package myPackage;
+
+message PingMessage {
+  int64 clientTimestamp = 1;
+  int64 serverTimestamp = 2;
+}
+
+message PongMessage {
+  int64 clientTimestamp = 1;
+  int64 serverTimestamp = 2;
+  bool isMasterClock = 3;
+}
+
+message EstablishSessionRequest {
+  string application = 1;
+  string version = 2;
+  string authenticationToken = 3;
+  int64 clientTimestamp = 4;
+}
+
+message EstablishSessionResponse {
+  bool success = 1;
+  int64 clientTimestamp = 2;
+  int64 masterTimestamp = 3;
+  AccountInfo account = 4;
+  CharacterInfo character = 5;
+}
+
+message AccountInfo {
+  int64 accountId = 1;
+  string email = 2;
+  bool isAdmin = 3;
+  string createdAt = 4;
+  string lastLogin = 5;
+  string disabledAt = 6;
+  string bannedUntil = 7;
+}
+
+message CharacterInfo {
+  string name = 1;
+  repeated int32 itemIds = 2;
+  int64 characterId = 3;
+  string displayName = 4;
+  int32 mapId = 5;
+  int32 channelId = 6;
+  int64 createdTimestamp = 7;
+  repeated CharacterAppearance appearance = 8;
+}
+
+message CharacterAppearance {
+  CharacterAppearancePart part = 1;
+  int32 value = 2;
+}
+
+enum CharacterAppearancePart {
+  CHARACTER_APPEARANCE_PART_NONE = 0;
+  CHARACTER_APPEARANCE_PART_EYES = 1;
+}
+
+message WrappedEntityState {
+  EntityType type = 1;
+  bytes data = 2;
+}
+
+message PlayerState {
+  Vector2 position = 1;
+  FacingDirection facingDirection = 2;
+  int64 dataId = 3;
+  MoveType moveType = 4;
+  int64 gameSessionId = 5;
+  int64 accountId = 6;
+  int64 characterId = 7;
+  string displayName = 8;
+  repeated CharacterAppearance appearance = 9;
+  int32 danceIndex = 10;
+  int32 timeToLive = 11;
+  int64 lastKeepAlive = 12;
+  int64 lastMove = 13;
+  int64 lastTeleport = 14;
+  int64 lastChannelUpdate = 15;
+  int64 lastAppearanceUpdate = 16;
+}
+
+message Vector2 {
+  float x = 1;
+  float y = 2;
+}
+
+message GameSessionOpenedEvent {
+  int64 accountId = 1;
+  int64 characterId = 2;
+  int64 entityId = 3;
+  WrappedEntityState wrappedEntityState = 4;
+  int32 channelId = 5;
+  int32 mapId = 6;
+}
+
+enum EntityType {
+  ENTITY_TYPE_NONE = 0;
+  ENTITY_TYPE_GENERIC = 1;
+  ENTITY_TYPE_INTERACTABLE = 2;
+  ENTITY_TYPE_OCCUPIABLE = 3;
+  ENTITY_TYPE_MOBILE = 4;
+  ENTITY_TYPE_PLAYER = 5;
+  ENTITY_TYPE_NPC = 6;
+  ENTITY_TYPE_PORTAL = 7;
+  ENTITY_TYPE_DOOR = 8;
+  ENTITY_TYPE_COLLECTABLE = 9;
+  ENTITY_TYPE_DJBOOTH = 10;
+}
+
+enum FacingDirection {
+  FACING_DIRECTION_NONE = 0;
+  FACING_DIRECTION_NORTH = 1;
+  FACING_DIRECTION_SOUTH = 2;
+  FACING_DIRECTION_EAST = 3;
+  FACING_DIRECTION_WEST = 4;
+}
+
+enum MoveType {
+  MOVE_TYPE_NONE = 0;
+  MOVE_TYPE_WALK = 1;
+  MOVE_TYPE_SPRINT = 2;
+}

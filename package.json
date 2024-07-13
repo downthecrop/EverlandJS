@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "google-protobuf": "^3.21.2",
+    "long": "^5.2.3",
+    "openssl-wrapper": "^0.3.4",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "protobufjs": "^7.3.2"
+  }
+}
