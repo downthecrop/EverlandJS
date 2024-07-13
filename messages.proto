@@ -45,17 +45,35 @@ message CharacterInfo {
 
 message CharacterAppearance {
   CharacterAppearancePart part = 1;
-  int32 value = 2;
+  int64 value = 2;
 }
 
 enum CharacterAppearancePart {
-  CHARACTER_APPEARANCE_PART_NONE = 0;
-  CHARACTER_APPEARANCE_PART_EYES = 1;
+		None = 0;
+		Hat = 1;
+		Hair = 2;
+		Eyes = 3;
+		Jacket = 4;
+		Shirt = 5;
+		Back = 6;
+		Pants = 7;
+		Shoes = 8;
+		Skin  = 9;
 }
 
 message WrappedEntityState {
   EntityType type = 1;
   bytes data = 2;
+}
+
+message CharacterLoadoutUpdatedEvent {
+  int64 characterLoadoutId = 1;
+  repeated int32 items = 2;
+}
+
+message CharacterAppearanceUpdatedEvent {
+    int64 characterId = 1;
+    repeated CharacterAppearance appearance = 2;
 }
 
 message PlayerState {

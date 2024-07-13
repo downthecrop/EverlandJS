@@ -45,7 +45,7 @@ const mockAccount = {
 // Define a mock GetAccountCharactersResponse
 const mockGetAccountCharactersResponse = {
     Error: CharacterErrorCode.None,
-    Characters: [{"Name":"test","ItemIds":[790,673,1390,1047,1318,1528], "CharacterId" : 1, "DisplayName" : "Crop", "MapId": 0, "ChannelId":1}],
+    Characters: [{"Name":"Crop","ItemIds":[720,673,1456,1062,1312,1528]}],
 };
 
 // Request handler
@@ -126,7 +126,7 @@ const requestHandler = (req, res) => {
                     DisplayName: character.DisplayName,
                     Name: character.Name,
                     AccountId: 1,
-                    MapId: 0,
+                    MapId: 1,
                     ChannelId: 0,
                     ItemIds: character.ItemIds
                 };

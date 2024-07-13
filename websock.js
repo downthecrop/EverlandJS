@@ -1,6 +1,6 @@
 ﻿const WebSocket = require('ws');
+const protobuf = require('protobufjs');
 const Long = require('long');
-const messages = require('./messages_pb'); // Adjust the path if needed
 
 const server = new WebSocket.Server({ port: 8080 });
 
@@ -13,10 +13,12 @@ const MessageOpcode = {
     PingMessage: 1101,
     GameSessionClosedEvent: 100001,
     GameSessionOpenedEvent: 100000,
+    CharacterAppearanceUpdatedEvent: 3002,
     // Add the rest of your opcodes here...
 };
 
-// These packets will get you into the game
+
+// These packets will get you into the game {EstablishSessionResponse, GameSession, Test Inventory, Test Character }
 // credit Cerulean
 const testPacket0 = 'E80300003D000000080118BEDAFCC18A3220BEDAFCC18A322A0D087B1209746573744074657374321C0801120A506F674368616D70363918C1DAFCC18A322205080310AA05';
 const testPacket1 = 'A08601003A000000087B10011801222E0805122A0A0A0D0000803F15000000401003200228B936307B3801420A506F674368616D7036394A05080310AA052801300110AA05';
@@ -36,148 +38,154 @@ function hexToBuffer(hex) {
 }
 
 function sendMessage(ws, opcode, message) {
-    const messageBuffer = message.serializeBinary();
+    const messageBuffer = message.constructor.encode(message).finish();
     const responseWithHeader = createMessageWithHeader(opcode, messageBuffer);
     ws.send(responseWithHeader, { binary: true });
-    console.log("Sent:", message.constructor.name, message.toObject());
-    console.log("Sent Raw: ", responseWithHeader.toString('hex'))
+    console.log("Sent:", message.constructor.name, message);
+    console.log("Sent Raw: ", responseWithHeader.toString('hex'));
 }
 
-server.on('connection', (ws) => {
-    console.log("New Connection");
+protobuf.load("messages.proto", (err, root) => {
+    if (err) throw err;
 
-    ws.on('message', (data) => {
-        console.log('Received raw data:', data.toString('hex'));
+    const PingMessage = root.lookupType("myPackage.PingMessage");
+    const PongMessage = root.lookupType("myPackage.PongMessage");
+    const EstablishSessionRequest = root.lookupType("myPackage.EstablishSessionRequest");
+    const EstablishSessionResponse = root.lookupType("myPackage.EstablishSessionResponse");
+    const AccountInfo = root.lookupType("myPackage.AccountInfo");
+    const CharacterInfo = root.lookupType("myPackage.CharacterInfo");
+    const CharacterAppearance = root.lookupType("myPackage.CharacterAppearance");
+    const PlayerState = root.lookupType("myPackage.PlayerState");
+    const Vector2 = root.lookupType("myPackage.Vector2");
+    const WrappedEntityState = root.lookupType("myPackage.WrappedEntityState");
+    const GameSessionOpenedEvent = root.lookupType("myPackage.GameSessionOpenedEvent");
+    const CharacterLoadoutUpdatedEvent = root.lookupType("myPackage.CharacterLoadoutUpdatedEvent");
+    const FacingDirection = root.lookupEnum("myPackage.FacingDirection");
 
-        if (data.length === 0) {
-            console.log('Received an empty message, ignoring.');
-            return;
-        }
+    server.on('connection', (ws) => {
+        console.log("New Connection");
 
-        let header = Buffer.alloc(0);
-        let opcode = 0;
+        ws.on('message', (data) => {
+            console.log('Received raw data:', data.toString('hex'));
 
-        if (data.length > 8) {
-            header = data.slice(0, 8);
-            data = data.slice(8);
-            opcode = header.readUInt32LE(0);
-            console.log('Received opcode:', opcode);
-        }
+            if (data.length === 0) {
+                console.log('Received an empty message, ignoring.');
+                return;
+            }
 
-        switch (opcode) {
-            case MessageOpcode.PingMessage: {
-                try {
-                    const message = messages.PingMessage.deserializeBinary(data);
-                    console.log('Received PingMessage:', message.toObject());
+            let header = Buffer.alloc(0);
+            let opcode = 0;
 
-                    const pongMessage = new messages.PongMessage();
-                    pongMessage.setClienttimestamp(message.getClienttimestamp());
-                    pongMessage.setServertimestamp(Date.now());
-                    pongMessage.setIsmasterclock(true);
+            if (data.length > 8) {
+                header = data.slice(0, 8);
+                data = data.slice(8);
+                opcode = header.readUInt32LE(0);
+                console.log('Received opcode:', opcode);
+            }
 
-                    sendMessage(ws, MessageOpcode.PongMessage, pongMessage);
-                    return;
-                } catch (err) {
-                    console.error("Error processing PingMessage:", err);
+            switch (opcode) {
+                case MessageOpcode.PingMessage: {
+                    try {
+                        const message = PingMessage.decode(data);
+                        console.log('Received PingMessage:', message);
+
+                        const pongMessage = PongMessage.create({
+                            clientTimestamp: message.clientTimestamp,
+                            serverTimestamp: Date.now(),
+                            isMasterClock: true
+                        });
+
+                        sendMessage(ws, MessageOpcode.PongMessage, pongMessage);
+                        return;
+                    } catch (err) {
+                        console.error("Error processing PingMessage:", err);
+                    }
+                    break;
                 }
-                break;
-            }
-            case MessageOpcode.EstablishSessionRequest: {
-                try {
-                    const message = messages.EstablishSessionRequest.deserializeBinary(data);
-                    console.log('Received EstablishSessionRequest:', message.toObject());
+                case MessageOpcode.EstablishSessionRequest: {
+                    try {
+                        const message = EstablishSessionRequest.decode(data);
+                        console.log('Received EstablishSessionRequest:', message);
 
-                    const mockAccount = new messages.AccountInfo();
-                    console.log(mockAccount);
-                    // Method 2: Using Object.getOwnPropertyNames
-                    console.log(Object.getOwnPropertyNames(Object.getPrototypeOf(mockAccount)));
+                        const mockAccount = AccountInfo.create({
+                            accountId: 123,
+                            email: "test@test"
+                        });
 
-                    // Method 3: Using Reflect.ownKeys
-                    console.log(Reflect.ownKeys(Object.getPrototypeOf(mockAccount)));
-                    mockAccount.setAccountid(123);
-                    mockAccount.setEmail("test@test");
+                        const mockCharacter = CharacterInfo.create({
+                            characterId: 1,
+                            name: "Crop",
+                            createdTimestamp: Date.now(),
+                            appearance: [CharacterAppearance.create({
+                                part: 1,
+                                value: Long.fromString("76773426334416903")
+                            })]
+                        });
 
-                    const mockCharacter = new messages.CharacterInfo();
-                    mockCharacter.setCharacterid(1);
-                    mockCharacter.setName("PogChamp69");
-                    mockCharacter.setCreatedtimestamp(Date.now());
-                    const appearance = new messages.CharacterAppearance();
-                    appearance.setPart(3);
-                    appearance.setValue(682);
-                    mockCharacter.addAppearance(appearance);
+                        const payload = EstablishSessionResponse.create({
+                            success: true,
+                            clientTimestamp: message.clientTimestamp,
+                            masterTimestamp: Date.now(),
+                            account: mockAccount,
+                            character: mockCharacter
+                        });
 
-                    const payload = new messages.EstablishSessionResponse();
-                    payload.setSuccess(true);
-                    payload.setClienttimestamp(message.getClienttimestamp());
-                    payload.setMastertimestamp(Date.now());
-                    payload.setAccount(mockAccount);
-                    payload.setCharacter(mockCharacter);
+                        sendMessage(ws, MessageOpcode.EstablishSessionResponse, payload);
 
-                    sendMessage(ws, MessageOpcode.EstablishSessionResponse, payload);
+                        const playerState = PlayerState.create({
+                            position: Vector2.create({ x: 1.0, y: 2.0 }),
+                            facingDirection: FacingDirection.FACING_DIRECTION_EAST,
+                            gameSessionId: 6969,
+                            accountId: 123,
+                            characterId: 1,
+                            displayName: "Crop",
+                            appearance: [CharacterAppearance.create({
+                                part: 1,
+                                value: Long.fromString("76773426334416903")
+                            })]
+                        });
 
+                        const wrappedEntityState = WrappedEntityState.create({
+                            type: 5,
+                            data: PlayerState.encode(playerState).finish()
+                        });
 
-                    // Create and send GameSessionOpenedEvent message
-                    const playerState = new messages.PlayerState();
-                    playerState.setPosition(new messages.Vector2());
-                    playerState.getPosition().setX(1.0);
-                    playerState.getPosition().setY(2.0);
-                    playerState.setFacingdirection(messages.FacingDirection.FACING_DIRECTION_EAST);
-                    playerState.setGamesessionid(6969);
-                    playerState.setAccountid(123);
-                    playerState.setCharacterid(1);
-                    playerState.setDisplayname("PogChamp69");
-                    playerState.addAppearance(appearance);
+                        const gameSessionOpenedEvent = GameSessionOpenedEvent.create({
+                            accountId: 123,
+                            characterId: 1,
+                            entityId: 1,
+                            wrappedEntityState: wrappedEntityState,
+                            channelId: 1,
+                            mapId: 1
+                        });
 
-                    const wrappedEntityState = new messages.WrappedEntityState();
-                    wrappedEntityState.setType(5);
-                    wrappedEntityState.setData(playerState.serializeBinary());
+                        sendMessage(ws, MessageOpcode.GameSessionOpenedEvent, gameSessionOpenedEvent);
 
-                    const gameSessionOpenedEvent = new messages.GameSessionOpenedEvent();
-                    gameSessionOpenedEvent.setAccountid(123);
-                    gameSessionOpenedEvent.setCharacterid(1);
-                    gameSessionOpenedEvent.setEntityid(1);  // Example entity ID
-                    gameSessionOpenedEvent.setWrappedentitystate(wrappedEntityState);
-                    gameSessionOpenedEvent.setChannelid(1);  // Example channel ID
-                    gameSessionOpenedEvent.setMapid(1);  // Example map ID
+                        const characterLoadout = CharacterLoadoutUpdatedEvent.create({
+                            characterLoadoutId: 1,
+                            items: [720, 673, 1456, 1062, 1312, 1528]
+                        });
 
-                    //sendMessage(ws, MessageOpcode.GameSessionOpenedEvent, gameSessionOpenedEvent);
+                        // Uncomment if needed
+                        // sendMessage(ws, 3006, characterLoadout);
 
-
-                    //ws.send(hexToBuffer(testPacket0), { binary: true });
-                    //console.log('Sent test packet 0');
-
-                    ws.send(hexToBuffer(testPacket1), { binary: true });
-                    console.log('Sent test packet 1');
-
-                    //ws.send(hexToBuffer(testPacket2), { binary: true });
-                    //console.log('Sent test packet 2');
-
-                    //ws.send(hexToBuffer(testPacket3), { binary: true });
-                    //console.log('Sent test packet 3');
-
-                    //ws.send(hexToBuffer(testPacket4), { binary: true });
-                    //console.log('Sent test packet 4');
-
-                    return;
-                } catch (err) {
-                    console.error('Error processing EstablishSessionRequest:', err);
+                        return;
+                    } catch (err) {
+                        console.error('Error processing EstablishSessionRequest:', err);
+                    }
+                    break;
                 }
-                break;
+                default: {
+                    console.error('Unknown message type received');
+                    break;
+                }
             }
-            default: {
-                console.error('Unknown message type received');
-                break;
-            }
-        }
-    });
+        });
 
-    ws.on('close', () => {
-        console.log('Client disconnected');
+        ws.on('close', () => {
+            console.log('Client disconnected');
+        });
     });
 });
-
-function hexToBuffer(hex) {
-    return Buffer.from(hex.replace(/\s/g, ''), 'hex');
-}
 
 console.log('WebSocket server is running on ws://localhost:8080');
