@@ -100,6 +100,78 @@ message Vector2 {
   float y = 2;
 }
 
+message ChannelInfo {
+  int32 channelId = 1;
+  int32 population = 2;
+}
+
+message GetChannelsResponse {
+  ChannelInfo channelInfo = 1;
+}
+
+message UpdateChannelRequest {
+  int32 channelId = 1;
+}
+
+message UpdateChannelResponse {
+  bool success = 1;
+  ErrorCode error = 2;
+}
+
+message SubscribedToChannelEvent {
+  int32 channelId = 1;
+  string name = 2;
+  ChannelType type = 3;
+  int64 createdAt = 4;
+  int32 channelFlags = 5;
+  int32 subscriptionFlags = 6;
+  repeated ChannelSubscriber subscribers = 7;
+  repeated ChannelMessage history = 8;
+  repeated ChannelMessage unacknowledged = 9;
+}
+
+message SendMessageToChannelRequest {
+  int64 requestId = 1;
+  int64 channelId = 2;
+  string body = 3;
+  bool action = 4;
+}
+
+message ChannelMessageSentEvent {
+  int64 requestId = 1;
+  int64 messageId = 2;
+  int64 sentAt = 3;
+}
+
+message ChannelMessageEvent {
+  int64 channelId = 1;
+  ChannelMessage message = 2;
+}
+
+
+message AcknowledgeChannelMessageRequest {
+  int64 messageId = 1;
+}
+
+message ChannelMessageAcknowledgedEvent {
+  int64 messageId = 1;
+}
+
+
+message ChannelSubscriber {
+  int64 subscriberId = 1;
+  string name = 2;
+}
+
+message ChannelMessage {
+  int64 messageId = 1;
+  int64 sentAt = 2;
+  ChannelSubscriber sender = 3;
+  string body = 4;
+  bool action = 5;
+}
+
+
 message GameSessionOpenedEvent {
   int64 accountId = 1;
   int64 characterId = 2;
@@ -121,6 +193,19 @@ enum EntityType {
   ENTITY_TYPE_DOOR = 8;
   ENTITY_TYPE_COLLECTABLE = 9;
   ENTITY_TYPE_DJBOOTH = 10;
+}
+
+enum ChannelType {
+  CHANNEL_TYPE_NONE = 0;
+  CHANNEL_TYPE_LOCAL = 1;
+  CHANNEL_TYPE_ZONE = 2;
+  CHANNEL_TYPE_GLOBAL = 3;
+  CHANNEL_TYPE_DIRECT = 4;
+  CHANNEL_TYPE_GROUP = 5;
+  CHANNEL_TYPE_PARTY = 6;
+  CHANNEL_TYPE_LOBBY = 7;
+  CHANNEL_TYPE_TEAM = 8;
+  CHANNEL_TYPE_COMMUNITY = 9;
 }
 
 enum ErrorCode {

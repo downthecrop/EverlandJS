@@ -1,4 +1,4 @@
-﻿const http = require('http');
+const http = require('http');
 const https = require('https');
 const fs = require('fs');
 
@@ -47,6 +47,8 @@ const mockGetAccountCharactersResponse = {
     Error: CharacterErrorCode.None,
     Characters: [{"Name":"Crop","ItemIds":[720,673,1456,1062,1312,1528]}],
 };
+
+// format is LoadFromNetwork(int hat, int hair, int eyes, int jacket, int shirt, int back, int pants, int shoes, int skinColor)
 
 // Request handler
 const requestHandler = (req, res) => {

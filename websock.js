@@ -11,9 +11,20 @@ const MessageOpcode = {
     ReestablishSessionEvent: 1003,
     EstablishSessionRequest: 1100,
     PingMessage: 1101,
+    GetChannelsRequest: 100100,
+    GetChannelsResponse: 100004,
+    UpdateChannelRequest: 100101,
+    UpdateChannelResponse: 100005,
+    SubscribedToChannelEvent: 5002,
     GameSessionClosedEvent: 100001,
     GameSessionOpenedEvent: 100000,
     CharacterAppearanceUpdatedEvent: 3002,
+    SendMessageToChannelRequest: 5102,
+    ChannelMessageAcknowledgedEvent: 5010,
+    AcknowledgeChannelMessageRequest: 5103,
+    ChannelMessageEvent: 5007,
+    ChannelMessageSentEvent: 5008,
+    ChannelMessageSendFailedEvent: 5009,
     // Add the rest of your opcodes here...
 };
 
@@ -33,16 +44,12 @@ function createMessageWithHeader(opcode, messageBuffer) {
     return Buffer.concat([header, messageBuffer]);
 }
 
-function hexToBuffer(hex) {
-    return Buffer.from(hex.replace(/\s/g, ''), 'hex');
-}
-
 function sendMessage(ws, opcode, message) {
     const messageBuffer = message.constructor.encode(message).finish();
     const responseWithHeader = createMessageWithHeader(opcode, messageBuffer);
     ws.send(responseWithHeader, { binary: true });
     console.log("Sent:", message.constructor.name, message);
-    console.log("Sent Raw: ", responseWithHeader.toString('hex'));
+    console.log("Sent Raw: Opcode", opcode, responseWithHeader.toString('hex'));
 }
 
 protobuf.load("messages.proto", (err, root) => {
@@ -58,9 +65,24 @@ protobuf.load("messages.proto", (err, root) => {
     const PlayerState = root.lookupType("myPackage.PlayerState");
     const Vector2 = root.lookupType("myPackage.Vector2");
     const WrappedEntityState = root.lookupType("myPackage.WrappedEntityState");
+    const GetChannelsResponse = root.lookupType("myPackage.GetChannelsResponse");
+    const SendMessageToChannelRequest = root.lookupType("myPackage.SendMessageToChannelRequest");
+    const UpdateChannelRequest = root.lookupType("myPackage.UpdateChannelRequest");
+    const ChannelMessageEvent = root.lookupType("myPackage.ChannelMessageEvent");
+    const AcknowledgeChannelMessageRequest = root.lookupType("myPackage.AcknowledgeChannelMessageRequest");
+    const SubscribedToChannelEvent = root.lookupType("myPackage.SubscribedToChannelEvent");
+    const ChannelMessageAcknowledgedEvent = root.lookupType("myPackage.ChannelMessageAcknowledgedEvent");
+    const ChannelSubscriber = root.lookupType("myPackage.ChannelSubscriber");
+    const ChannelMessage = root.lookupType("myPackage.ChannelMessage");
+    const UpdateChannelResponse = root.lookupType("myPackage.UpdateChannelResponse");
+    const ChannelInfo = root.lookupType("myPackage.ChannelInfo");
     const GameSessionOpenedEvent = root.lookupType("myPackage.GameSessionOpenedEvent");
     const CharacterLoadoutUpdatedEvent = root.lookupType("myPackage.CharacterLoadoutUpdatedEvent");
     const FacingDirection = root.lookupEnum("myPackage.FacingDirection");
+
+
+
+
 
     server.on('connection', (ws) => {
         console.log("New Connection");
@@ -91,7 +113,7 @@ protobuf.load("messages.proto", (err, root) => {
 
                         const pongMessage = PongMessage.create({
                             clientTimestamp: message.clientTimestamp,
-                            serverTimestamp: Date.now(),
+                            serverTimestamp: Long.fromString(Date.now().toString()),
                             isMasterClock: true
                         });
 
@@ -119,10 +141,10 @@ protobuf.load("messages.proto", (err, root) => {
                         }), CharacterAppearance.create({
                             part: 5,
                             value: Long.fromString("76773425881432070")
-                        }),  CharacterAppearance.create({
+                        }), CharacterAppearance.create({
                             part: 7,
                             value: Long.fromString("76773426363777052")
-                        }),  CharacterAppearance.create({
+                        }), CharacterAppearance.create({
                             part: 8,
                             value: Long.fromString("76773426460246021")
                         })]
@@ -135,14 +157,14 @@ protobuf.load("messages.proto", (err, root) => {
                         const mockCharacter = CharacterInfo.create({
                             characterId: 1,
                             name: "Crop",
-                            createdTimestamp: Date.now(),
+                            createdTimestamp: Long.fromString(Date.now().toString()),
                             appearance: appearance
                         });
 
                         const payload = EstablishSessionResponse.create({
                             success: true,
                             clientTimestamp: message.clientTimestamp,
-                            masterTimestamp: Date.now(),
+                            masterTimestamp: Long.fromString(Date.now().toString()),
                             account: mockAccount,
                             character: mockCharacter
                         });
@@ -187,6 +209,84 @@ protobuf.load("messages.proto", (err, root) => {
                     } catch (err) {
                         console.error('Error processing EstablishSessionRequest:', err);
                     }
+                    break;
+                }
+                case MessageOpcode.GetChannelsRequest: {
+                    const channelInfo = ChannelInfo.create({
+                        channelId: 1,
+                        population: 1
+                    });
+                    const getChannelsResponse = GetChannelsResponse.create({
+                        channelInfo: channelInfo
+                    });
+                    sendMessage(ws, MessageOpcode.GetChannelsResponse, getChannelsResponse);
+                    break;
+                }
+                case MessageOpcode.UpdateChannelRequest: {
+                    const updateChannelResponse = UpdateChannelResponse.create({
+                        success: true,
+                        error: 0
+                    });
+                    sendMessage(ws, MessageOpcode.UpdateChannelResponse, updateChannelResponse);
+
+                    const subscribers = ChannelSubscriber.create({
+                        subscriberId: 1,
+                        name: "Crop"
+                    });
+                    const subscriberServer = ChannelSubscriber.create({
+                        subscriberId: 2,
+                        name: "CropServer"
+                    });
+
+                    const fakeHistory = ChannelMessage.create({
+                        messageId: 1,
+                        sentAt: Long.fromString(Date.now().toString()), 
+                        sender: subscriberServer,
+                        body: "test",
+                        action: false
+                    });
+
+                    const subscribedToChannelEvent = SubscribedToChannelEvent.create({
+                        channelId: 1,
+                        name: "Zone Chat",
+                        type: 1,
+                        createdAt: Long.fromString(Date.now().toString()),
+                        channelFlags: 32767,
+                        subscriptionFlags: 3,
+                        subscribers: [subscribers, subscriberServer],
+                        history: [fakeHistory],
+                        unacknowledged: [fakeHistory]
+                    });
+
+                    sendMessage(ws, MessageOpcode.SubscribedToChannelEvent, subscribedToChannelEvent);
+
+                    break;
+                }
+                case MessageOpcode.SendMessageToChannelRequest: {
+                    const message = SendMessageToChannelRequest.decode(data);
+                    console.log("Got Message: ", message)
+                    const msg = ChannelMessageEvent.create({
+                        channelId: 1,
+                        message: ChannelMessage.create({
+                            messageId: message.requestId,
+                            sentAt: Long.fromString(Date.now().toString()), 
+                            sender: ChannelSubscriber.create({
+                                subscriberId: 1,
+                                name: "Crop"
+                            }),
+                            body: message.body,
+                            action: false
+                        })});
+                        sendMessage(ws, MessageOpcode.ChannelMessageEvent, msg);
+                    break;
+                }
+                case MessageOpcode.AcknowledgeChannelMessageRequest: {
+                    const message = AcknowledgeChannelMessageRequest.decode(data);
+                    const ack = ChannelMessageAcknowledgedEvent.create({
+                        messageId: message.messageId
+                    });
+                    sendMessage(ws, MessageOpcode.ChannelMessageAcknowledgedEvent, ack);
+
                     break;
                 }
                 default: {
