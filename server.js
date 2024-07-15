@@ -152,7 +152,7 @@ const requestHandler = (req, res) => {
         });
     } else if (req.method === 'GET' && req.url === '/gateway/endpoint') {
         // Responding with a string array
-        let response = ["ws://localhost:8080/"];
+        let response = ["ws://192.168.35.208:8080/"];
         //let response = ["ws://localhost:81"];
 
         console.log(`Sending response: ${JSON.stringify(response)}`);

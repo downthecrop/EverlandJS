@@ -25,17 +25,16 @@ const MessageOpcode = {
     ChannelMessageEvent: 5007,
     ChannelMessageSentEvent: 5008,
     ChannelMessageSendFailedEvent: 5009,
+    PlayerMoveCommand: 101012,
+    EntityJoinedEvent: 101001,
+    PlayerPositionUpdate: 101002,  // Placeholder for the new packet
     // Add the rest of your opcodes here...
 };
 
-
-// These packets will get you into the game {EstablishSessionResponse, GameSession, Test Inventory, Test Character }
-// credit Cerulean
-const testPacket0 = 'E80300003D000000080118BEDAFCC18A3220BEDAFCC18A322A0D087B1209746573744074657374321C0801120A506F674368616D70363918C1DAFCC18A322205080310AA05';
-const testPacket1 = 'A08601003A000000087B10011801222E0805122A0A0A0D0000803F15000000401003200228B936307B3801420A506F674368616D7036394A05080310AA052801300110AA05';
-const testPacket2 = '898A01002F0000000802122B080512270A0A0D0000803F15000000401003200228BA36307C380242074269674D656D654A05080310AA054A05080310AA052801300110AA05';
-const testPacket3 = 'A00F0000220000000A0F0801100118012207080110AA0518010A0F0802100118022207080210AA05180169674D656D654A05080310AA054A05080310AA052801300110AA05';
-const testPacket4 = 'BA0B00000900000008011205080310AA0507080110AA0518010A0F0802100118022207080210AA05180169674D656D654A05080310AA054A05080310AA052801300110AA05';
+const players = new Map();
+const chatHistory = [];
+let playerCounter = 0;
+let messageCounter = 0;
 
 function createMessageWithHeader(opcode, messageBuffer) {
     const header = Buffer.alloc(8);
@@ -52,6 +51,17 @@ function sendMessage(ws, opcode, message) {
     console.log("Sent Raw: Opcode", opcode, responseWithHeader.toString('hex'));
 }
 
+function broadcastMessage(opcode, message, excludeWs = null) {
+    const messageBuffer = message.constructor.encode(message).finish();
+    const responseWithHeader = createMessageWithHeader(opcode, messageBuffer);
+    players.forEach(player => {
+        if (player.ws.readyState === WebSocket.OPEN && player.ws !== excludeWs) {
+            player.ws.send(responseWithHeader, { binary: true });
+        }
+    });
+    console.log("Broadcasted:", message.constructor.name, message);
+}
+
 protobuf.load("messages.proto", (err, root) => {
     if (err) throw err;
 
@@ -64,6 +74,8 @@ protobuf.load("messages.proto", (err, root) => {
     const CharacterAppearance = root.lookupType("myPackage.CharacterAppearance");
     const PlayerState = root.lookupType("myPackage.PlayerState");
     const Vector2 = root.lookupType("myPackage.Vector2");
+    const PlayerMoveCommand = root.lookupType("myPackage.PlayerMoveCommand");
+    const EntityJoinedEvent = root.lookupType("myPackage.EntityJoinedEvent");
     const WrappedEntityState = root.lookupType("myPackage.WrappedEntityState");
     const GetChannelsResponse = root.lookupType("myPackage.GetChannelsResponse");
     const SendMessageToChannelRequest = root.lookupType("myPackage.SendMessageToChannelRequest");
@@ -77,15 +89,22 @@ protobuf.load("messages.proto", (err, root) => {
     const UpdateChannelResponse = root.lookupType("myPackage.UpdateChannelResponse");
     const ChannelInfo = root.lookupType("myPackage.ChannelInfo");
     const GameSessionOpenedEvent = root.lookupType("myPackage.GameSessionOpenedEvent");
+    const MobileMovedEvent = root.lookupType("myPackage.MobileMovedEvent");
     const CharacterLoadoutUpdatedEvent = root.lookupType("myPackage.CharacterLoadoutUpdatedEvent");
     const FacingDirection = root.lookupEnum("myPackage.FacingDirection");
 
-
-
-
-
     server.on('connection', (ws) => {
-        console.log("New Connection");
+        const playerId = ++playerCounter;
+        const playerName = `Crop${playerId}`;
+
+        // Initialize player object
+        const player = {
+            id: playerId,
+            name: playerName,
+            position: { x: 0, y: 0 },
+            ws: ws
+        };
+        players.set(playerId, player);
 
         ws.on('message', (data) => {
             console.log('Received raw data:', data.toString('hex'));
@@ -150,13 +169,13 @@ protobuf.load("messages.proto", (err, root) => {
                         })]
 
                         const mockAccount = AccountInfo.create({
-                            accountId: 123,
-                            email: "test@test"
+                            accountId: playerId,
+                            email: `${playerName}@test`
                         });
 
                         const mockCharacter = CharacterInfo.create({
-                            characterId: 1,
-                            name: "Crop",
+                            characterId: playerId,
+                            name: playerName,
                             createdTimestamp: Long.fromString(Date.now().toString()),
                             appearance: appearance
                         });
@@ -172,12 +191,12 @@ protobuf.load("messages.proto", (err, root) => {
                         sendMessage(ws, MessageOpcode.EstablishSessionResponse, payload);
 
                         const playerState = PlayerState.create({
-                            position: Vector2.create({ x: 1.0, y: 2.0 }),
+                            position: Vector2.create({ x: player.position.x, y: player.position.y }),
                             facingDirection: FacingDirection.FACING_DIRECTION_EAST,
-                            gameSessionId: 6969,
-                            accountId: 123,
-                            characterId: 1,
-                            displayName: "Crop",
+                            gameSessionId: playerId,
+                            accountId: playerId,
+                            characterId: playerId,
+                            displayName: playerName,
                             appearance: appearance
                         });
 
@@ -187,9 +206,9 @@ protobuf.load("messages.proto", (err, root) => {
                         });
 
                         const gameSessionOpenedEvent = GameSessionOpenedEvent.create({
-                            accountId: 123,
-                            characterId: 1,
-                            entityId: 1,
+                            accountId: playerId,
+                            characterId: playerId,
+                            entityId: playerId,
                             wrappedEntityState: wrappedEntityState,
                             channelId: 1,
                             mapId: 1
@@ -197,13 +216,39 @@ protobuf.load("messages.proto", (err, root) => {
 
                         sendMessage(ws, MessageOpcode.GameSessionOpenedEvent, gameSessionOpenedEvent);
 
-                        const characterLoadout = CharacterLoadoutUpdatedEvent.create({
-                            characterLoadoutId: 1,
-                            items: [720, 673, 1456, 1062, 1312, 1528]
+                        const entityJoinedEvent = EntityJoinedEvent.create({
+                            entityId: playerId,
+                            wrappedEntityState: wrappedEntityState,
                         });
 
-                        // Uncomment if needed
-                        // sendMessage(ws, 3006, characterLoadout);
+                        broadcastMessage(MessageOpcode.EntityJoinedEvent, entityJoinedEvent, ws);
+
+                        // Send existing players to the new player
+                        players.forEach(existingPlayer => {
+                            if (existingPlayer.id !== playerId) {
+                                const existingPlayerState = PlayerState.create({
+                                    position: Vector2.create({ x: existingPlayer.position.x, y: existingPlayer.position.y }),
+                                    facingDirection: FacingDirection.FACING_DIRECTION_EAST,
+                                    gameSessionId: existingPlayer.id,
+                                    accountId: existingPlayer.id,
+                                    characterId: existingPlayer.id,
+                                    displayName: existingPlayer.name,
+                                    appearance: appearance
+                                });
+
+                                const wrappedExistingPlayerState = WrappedEntityState.create({
+                                    type: 5,
+                                    data: PlayerState.encode(existingPlayerState).finish()
+                                });
+
+                                const existingEntityJoinedEvent = EntityJoinedEvent.create({
+                                    entityId: existingPlayer.id,
+                                    wrappedEntityState: wrappedExistingPlayerState,
+                                });
+
+                                sendMessage(ws, MessageOpcode.EntityJoinedEvent, existingEntityJoinedEvent);
+                            }
+                        });
 
                         return;
                     } catch (err) {
@@ -229,21 +274,9 @@ protobuf.load("messages.proto", (err, root) => {
                     });
                     sendMessage(ws, MessageOpcode.UpdateChannelResponse, updateChannelResponse);
 
-                    const subscribers = ChannelSubscriber.create({
-                        subscriberId: 1,
-                        name: "Crop"
-                    });
-                    const subscriberServer = ChannelSubscriber.create({
-                        subscriberId: 2,
-                        name: "CropServer"
-                    });
-
-                    const fakeHistory = ChannelMessage.create({
-                        messageId: 1,
-                        sentAt: Long.fromString(Date.now().toString()), 
-                        sender: subscriberServer,
-                        body: "test",
-                        action: false
+                    const subscriber = ChannelSubscriber.create({
+                        subscriberId: playerId,
+                        name: playerName
                     });
 
                     const subscribedToChannelEvent = SubscribedToChannelEvent.create({
@@ -253,9 +286,9 @@ protobuf.load("messages.proto", (err, root) => {
                         createdAt: Long.fromString(Date.now().toString()),
                         channelFlags: 32767,
                         subscriptionFlags: 3,
-                        subscribers: [subscribers, subscriberServer],
-                        history: [fakeHistory],
-                        unacknowledged: [fakeHistory]
+                        subscribers: [subscriber],
+                        history: chatHistory,
+                        unacknowledged: chatHistory
                     });
 
                     sendMessage(ws, MessageOpcode.SubscribedToChannelEvent, subscribedToChannelEvent);
@@ -264,20 +297,24 @@ protobuf.load("messages.proto", (err, root) => {
                 }
                 case MessageOpcode.SendMessageToChannelRequest: {
                     const message = SendMessageToChannelRequest.decode(data);
-                    console.log("Got Message: ", message)
+                    console.log("Got Message: ", message);
+                    const channelMessage = ChannelMessage.create({
+                        messageId: Long.fromNumber(++messageCounter),
+                        sentAt: Long.fromString(Date.now().toString()), 
+                        sender: ChannelSubscriber.create({
+                            subscriberId: playerId,
+                            name: playerName
+                        }),
+                        body: message.body,
+                        action: false
+                    });
+
+                    chatHistory.push(channelMessage);
                     const msg = ChannelMessageEvent.create({
                         channelId: 1,
-                        message: ChannelMessage.create({
-                            messageId: message.requestId,
-                            sentAt: Long.fromString(Date.now().toString()), 
-                            sender: ChannelSubscriber.create({
-                                subscriberId: 1,
-                                name: "Crop"
-                            }),
-                            body: message.body,
-                            action: false
-                        })});
-                        sendMessage(ws, MessageOpcode.ChannelMessageEvent, msg);
+                        message: channelMessage
+                    });
+                    broadcastMessage(MessageOpcode.ChannelMessageEvent, msg);
                     break;
                 }
                 case MessageOpcode.AcknowledgeChannelMessageRequest: {
@@ -289,6 +326,17 @@ protobuf.load("messages.proto", (err, root) => {
 
                     break;
                 }
+                case MessageOpcode.PlayerMoveCommand: {
+                    const message = PlayerMoveCommand.decode(data);
+                    console.log("PlayerMoveCommand:", message);
+
+                    // Update player's position
+                    player.position.x = message.position.x;
+                    player.position.y = message.position.y;
+
+                    // No need to broadcast the updated position here
+                    break;
+                }
                 default: {
                     console.error('Unknown message type received');
                     break;
@@ -298,6 +346,7 @@ protobuf.load("messages.proto", (err, root) => {
 
         ws.on('close', () => {
             console.log('Client disconnected');
+            players.delete(playerId);
         });
     });
 });

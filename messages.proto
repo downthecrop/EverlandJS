@@ -36,6 +36,15 @@ message AccountInfo {
   int64 bannedUntil = 4;
 }
 
+message MobileMovedEvent {
+  int64 entityId = 1;
+  Vector2 position = 2;
+}
+
+message PlayerMoveCommand {
+    Vector2 position = 1;
+}
+
 message CharacterInfo {
   int64 characterId = 1;
   string name = 2;
@@ -179,6 +188,11 @@ message GameSessionOpenedEvent {
   WrappedEntityState wrappedEntityState = 4;
   int32 channelId = 5;
   int32 mapId = 6;
+}
+
+message EntityJoinedEvent {
+  int64 entityId = 1;
+  WrappedEntityState wrappedEntityState = 2;
 }
 
 enum EntityType {

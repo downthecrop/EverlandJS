@@ -3,6 +3,7 @@
     "google-protobuf": "^3.21.2",
     "long": "^5.2.3",
     "openssl-wrapper": "^0.3.4",
+    "uuid": "^10.0.0",
     "ws": "^8.18.0"
   },
   "devDependencies": {
