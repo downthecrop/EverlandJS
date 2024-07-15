@@ -28,6 +28,7 @@ const MessageOpcode = {
     PlayerMoveCommand: 101012,
     EntityJoinedEvent: 101001,
     PlayerPositionUpdate: 101002,  // Placeholder for the new packet
+    MobileMovedEvent: 101010,
     // Add the rest of your opcodes here...
 };
 
@@ -279,6 +280,13 @@ protobuf.load("messages.proto", (err, root) => {
                         name: playerName
                     });
 
+                    const fakesub = ChannelSubscriber.create({
+                        subscriberId: 6969,
+                        name: "CropServer"
+                    });
+
+
+
                     const subscribedToChannelEvent = SubscribedToChannelEvent.create({
                         channelId: 1,
                         name: "Zone Chat",
@@ -286,7 +294,7 @@ protobuf.load("messages.proto", (err, root) => {
                         createdAt: Long.fromString(Date.now().toString()),
                         channelFlags: 32767,
                         subscriptionFlags: 3,
-                        subscribers: [subscriber],
+                        subscribers: [subscriber, fakesub],
                         history: chatHistory,
                         unacknowledged: chatHistory
                     });
@@ -334,6 +342,12 @@ protobuf.load("messages.proto", (err, root) => {
                     player.position.x = message.position.x;
                     player.position.y = message.position.y;
 
+                    const mobileMovedEvent = MobileMovedEvent.create({
+                        entityId: player.id,
+                        position: Vector2.create({ x: player.position.x, y: player.position.y }),
+                    });
+
+                    broadcastMessage(MessageOpcode.MobileMovedEvent, mobileMovedEvent, ws);
                     // No need to broadcast the updated position here
                     break;
                 }
