@@ -1,36 +1,10 @@
 ﻿const WebSocket = require('ws');
 const protobuf = require('protobufjs');
 const Long = require('long');
+const MessageOpcode = require('./opcodes');
 
 const server = new WebSocket.Server({ port: 8080 });
 
-const MessageOpcode = {
-    EstablishSessionResponse: 1000,
-    PongMessage: 1001,
-    SessionClosedEvent: 1002,
-    ReestablishSessionEvent: 1003,
-    EstablishSessionRequest: 1100,
-    PingMessage: 1101,
-    GetChannelsRequest: 100100,
-    GetChannelsResponse: 100004,
-    UpdateChannelRequest: 100101,
-    UpdateChannelResponse: 100005,
-    SubscribedToChannelEvent: 5002,
-    GameSessionClosedEvent: 100001,
-    GameSessionOpenedEvent: 100000,
-    CharacterAppearanceUpdatedEvent: 3002,
-    SendMessageToChannelRequest: 5102,
-    ChannelMessageAcknowledgedEvent: 5010,
-    AcknowledgeChannelMessageRequest: 5103,
-    ChannelMessageEvent: 5007,
-    ChannelMessageSentEvent: 5008,
-    ChannelMessageSendFailedEvent: 5009,
-    PlayerMoveCommand: 101012,
-    EntityJoinedEvent: 101001,
-    PlayerPositionUpdate: 101002,  // Placeholder for the new packet
-    MobileMovedEvent: 101010,
-    // Add the rest of your opcodes here...
-};
 
 const players = new Map();
 const chatHistory = [];
